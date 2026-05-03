@@ -237,7 +237,6 @@ function WinnerCard({ candidate, title, delay, color }: WinnerCardProps) {
           >
             {candidate.name}
           </p>
-          <p className="text-white/60 text-xs mt-0.5 font-sans">{candidate.class}</p>
         </div>
       </motion.div>
 
@@ -255,17 +254,29 @@ function WinnerCard({ candidate, title, delay, color }: WinnerCardProps) {
         {title}
       </motion.div>
 
-      {/* NISN info */}
       <motion.div
         initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: delay + 0.7 }}
-        className="text-center space-y-0.5"
+        animate={{
+          opacity: [0.5, 1, 0.5],
+          textShadow: [
+            '0 0 5px rgba(255,255,255,0.2)',
+            '0 0 25px rgba(255,255,255,1)',
+            '0 0 5px rgba(255,255,255,0.2)',
+          ]
+        }}
+        transition={{
+          delay: delay + 0.7,
+          duration: 1.2,
+          repeat: Infinity,
+          ease: 'easeInOut'
+        }}
+        className="text-center mt-1"
       >
-        <p className="text-muted-foreground text-xs font-sans">
-          NISN: <span className="text-foreground/80">{candidate.nisn}</span>
+        <p className="text-sm md:text-base font-black tracking-widest text-white">
+          {candidate.class}
         </p>
       </motion.div>
+    
     </motion.div>
   )
 }
@@ -324,13 +335,45 @@ export default function WinnerDisplay({ king, queen, onReplay }: WinnerDisplayPr
             Selamat Kepada
           </p>
           <h1 className="font-serif text-3xl md:text-5xl font-black shimmer-text tracking-wider text-balance">
-            KING &amp; QUEEN 2026
+            KING &amp; QUEEN
           </h1>
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{
+              opacity: 1,
+              y: 0,
+              textShadow: [
+                '0 0 5px rgba(255,255,255,0.2)',
+                '0 0 30px rgba(255,215,0,1)',
+                '0 0 5px rgba(255,255,255,0.2)',
+              ]
+            }}
+            transition={{
+              delay: 0.4,
+              duration: 1.5,
+              repeat: Infinity,
+              ease: 'easeInOut'
+            }}
+            className="font-serif uppercase mt-2
+              text-lg md:text-2xl lg:text-3xl
+              font-black tracking-[0.25em]
+              text-white"
+            style={{
+              textShadow: `
+                0 2px 0 #aaa,
+                0 4px 0 #888,
+                0 6px 0 #666,
+                0 8px 12px rgba(0,0,0,0.7)
+              `
+            }}
+          >
+            SMK YADIKA BANDAR LAMPUNG
+          </motion.p>
         </motion.div>
 
         {/* Winners side by side */}
         <div className="flex items-end gap-6 md:gap-16">
-          <WinnerCard candidate={king} title="King 2026" delay={0.3} color="gold" />
+          <WinnerCard candidate={king} title="King" delay={0.3} color="gold" />
 
           {/* Center decoration */}
           <motion.div
@@ -344,7 +387,7 @@ export default function WinnerDisplay({ king, queen, onReplay }: WinnerDisplayPr
             <div className="w-px h-16 bg-gradient-to-b from-transparent via-[var(--purple)]/50 to-transparent" />
           </motion.div>
 
-          <WinnerCard candidate={queen} title="Queen 2026" delay={0.6} color="purple" />
+          <WinnerCard candidate={queen} title="Queen" delay={0.6} color="purple" />
         </div>
 
         {/* Replay button */}

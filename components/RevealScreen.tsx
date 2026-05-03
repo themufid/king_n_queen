@@ -306,7 +306,7 @@ export default function RevealScreen({
           <div className="flex gap-6 md:gap-10 justify-center items-start">
             <SlotCard
               candidate={currentKing}
-              label="KING 2026"
+              label="KING"
               isDone={isDone}
               isPaused={isPaused}
               isSpinning={isSpinning}
@@ -321,7 +321,7 @@ export default function RevealScreen({
 
             <SlotCard
               candidate={currentQueen}
-              label="QUEEN 2026"
+              label="QUEEN"
               isDone={isDone}
               isPaused={isPaused}
               isSpinning={isSpinning}

@@ -164,7 +164,7 @@ function LobbyView({ onStart }: { onStart: () => void }) {
           <SectionHeading
             id="king-section-title"
             label="Kandidat"
-            title="King 2026"
+            title="King"
             color="gold"
           />
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
@@ -197,7 +197,7 @@ function LobbyView({ onStart }: { onStart: () => void }) {
           <SectionHeading
             id="queen-section-title"
             label="Kandidat"
-            title="Queen 2026"
+            title="Queen"
             color="purple"
           />
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
