@@ -143,13 +143,13 @@ function LobbyView({ onStart }: { onStart: () => void }) {
           <div className="flex items-center justify-center gap-4 mb-6">
             <div className="h-px flex-1 max-w-24 bg-gradient-to-r from-transparent to-[var(--gold)]/50" />
             <span className="font-serif text-[var(--gold)] text-2xl md:text-4xl font-bold tracking-[0.3em]">
-              2026
+              SMK YADIKA BANDAR LAMPUNG
             </span>
             <div className="h-px flex-1 max-w-24 bg-gradient-to-l from-transparent to-[var(--gold)]/50" />
           </div>
 
           <p className="font-sans text-muted-foreground text-sm tracking-[0.2em] uppercase">
-            SMK Yadika Bandar Lampung
+            ANGKATAN KE XIII (2025/2026)
           </p>
         </motion.header>
 
