@@ -219,11 +219,6 @@ export const playCelebrationMusic = (
 
   bass(now + 2.6)
 
-  // 🎤 NAMA PEMENANG
-  speak(
-    `Kongratulations`,
-    3500
-  )
 
  
   melody(now + 3)
