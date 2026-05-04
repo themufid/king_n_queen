@@ -178,12 +178,7 @@ export const playCelebrationMusic = (
     o.stop(time + 1)
   }
 
-  // 👏 CROWD (REAL SOUND)
-  const playCrowd = () => {
-    const crowd = new Audio('/sounds/crowd.mp3')
-    crowd.volume = 1
-    crowd.play().catch(() => {})
-  }
+
 
   // 🎵 MELODY (SEKALI SAJA)
   const melody = (start: number) => {
@@ -211,7 +206,7 @@ export const playCelebrationMusic = (
   // 🎬 CINEMATIC FLOW
   // ======================
 
-  speak('And the winner is...', 0)
+  speak('Kongratulations', 0)
 
   guitar(350, now + 1.2, 0.7)
   guitar(600, now + 1.9, 0.7)
@@ -230,8 +225,7 @@ export const playCelebrationMusic = (
     3500
   )
 
-  setTimeout(playCrowd, 3600)
-
+ 
   melody(now + 3)
 }
 
