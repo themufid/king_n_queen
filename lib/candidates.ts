@@ -140,5 +140,5 @@ export const weightedQueenCandidates: Candidate[] = [
 // Ganti angka di bawah, lalu deploy ulang sebelum acara dimulai.
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const PREDETERMINED_WINNER_KING_ID = 5   // Maulana Hidayat Makalegi
-export const PREDETERMINED_WINNER_QUEEN_ID = 8  // Lily Essence Sinulingga
+export const PREDETERMINED_WINNER_KING_ID = 1   // Rehan Bastian
+export const PREDETERMINED_WINNER_QUEEN_ID = 6  // Khania Fitra Mareta Anjani

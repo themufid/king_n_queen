@@ -149,7 +149,7 @@ function LobbyView({ onStart }: { onStart: () => void }) {
           </div>
 
           <p className="font-sans text-muted-foreground text-sm tracking-[0.2em] uppercase">
-            ANGKATAN KE XIII (2025/2026)
+            THIRTEEN GENERATION (2025/2026)
           </p>
         </motion.header>
 
