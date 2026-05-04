@@ -221,7 +221,7 @@ export const playCelebrationMusic = (
 
   // 🎤 NAMA PEMENANG
   speak(
-    `Kongratulations ${kingName || ''} and ${queenName || ''}`,
+    `Kongratulations`,
     3500
   )
 
