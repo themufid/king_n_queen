@@ -1,114 +1,190 @@
 // Sound effects utilities
-export const playTickSound = () => {
-  const audioContext = typeof window !== 'undefined' ? new (window.AudioContext || (window as any).webkitAudioContext)() : null
-  if (!audioContext) return
 
-  const now = audioContext.currentTime
-  const osc = audioContext.createOscillator()
-  const gain = audioContext.createGain()
+// Helper: create audio context aman
+const getCtx = () => {
+  return typeof window !== 'undefined'
+    ? new (window.AudioContext || (window as any).webkitAudioContext)()
+    : null
+}
+
+// ==========================
+// 🔊 TICK SOUND
+// ==========================
+export const playTickSound = () => {
+  const ctx = getCtx()
+  if (!ctx) return
+
+  const now = ctx.currentTime
+
+  const osc = ctx.createOscillator()
+  const gain = ctx.createGain()
+
+  osc.type = 'square'
+  osc.frequency.setValueAtTime(1000, now)
+  osc.frequency.exponentialRampToValueAtTime(500, now + 0.05)
+
+  gain.gain.setValueAtTime(0.6, now)
+  gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05)
 
   osc.connect(gain)
-  gain.connect(audioContext.destination)
-
-  osc.frequency.setValueAtTime(800, now)
-  osc.frequency.exponentialRampToValueAtTime(600, now + 0.05)
-  gain.gain.setValueAtTime(0.3, now)
-  gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05)
+  gain.connect(ctx.destination)
 
   osc.start(now)
   osc.stop(now + 0.05)
 }
 
+// ==========================
+// 🎉 VICTORY SOUND
+// ==========================
 export const playVictorySound = () => {
-  const audioContext = typeof window !== 'undefined' ? new (window.AudioContext || (window as any).webkitAudioContext)() : null
-  if (!audioContext) return
+  const ctx = getCtx()
+  if (!ctx) return
 
-  const notes = [
-    { freq: 523.25, duration: 0.2 }, // C5
-    { freq: 659.25, duration: 0.2 }, // E5
-    { freq: 783.99, duration: 0.2 }, // G5
-    { freq: 1046.5, duration: 0.5 }, // C6
-  ]
+  const now = ctx.currentTime
 
-  let delay = 0
-  notes.forEach(({ freq, duration }) => {
-    const now = audioContext.currentTime + delay
-    const osc = audioContext.createOscillator()
-    const gain = audioContext.createGain()
+  const notes = [523.25, 659.25, 783.99, 1046.5]
+
+  notes.forEach((freq, i) => {
+    const t = now + i * 0.25
+
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+
+    osc.type = 'triangle'
+    osc.frequency.setValueAtTime(freq, t)
+
+    gain.gain.setValueAtTime(0.5, t)
+    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.3)
 
     osc.connect(gain)
-    gain.connect(audioContext.destination)
-    osc.frequency.setValueAtTime(freq, now)
-    gain.gain.setValueAtTime(0.3, now)
-    gain.gain.exponentialRampToValueAtTime(0.01, now + duration)
+    gain.connect(ctx.destination)
 
-    osc.start(now)
-    osc.stop(now + duration)
-    delay += duration
+    osc.start(t)
+    osc.stop(t + 0.3)
   })
 }
 
+// ==========================
+// 🔥 MAIN CELEBRATION (FINAL)
+// ==========================
 export const playCelebrationMusic = () => {
-  const audioContext = typeof window !== 'undefined' ? new (window.AudioContext || (window as any).webkitAudioContext)() : null
-  if (!audioContext) return
+  const ctx = getCtx()
+  if (!ctx) return
 
-  const playNote = (freq: number, start: number, duration: number, volume = 0.3) => {
-    const osc = audioContext.createOscillator()
-    const gain = audioContext.createGain()
+  const now = ctx.currentTime
+
+  // MASTER VOLUME
+  const master = ctx.createGain()
+  master.gain.setValueAtTime(1.2, now)
+  master.connect(ctx.destination)
+
+  // 🎸 JENG (clean guitar feel)
+  const playJeng = (freq: number, time: number, duration: number) => {
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+
+    osc.type = 'triangle' // clean
+    osc.frequency.setValueAtTime(freq, time)
+
+    gain.gain.setValueAtTime(0.8, time)
+    gain.gain.exponentialRampToValueAtTime(0.01, time + duration)
+
     osc.connect(gain)
-    gain.connect(audioContext.destination)
-    osc.frequency.setValueAtTime(freq, start)
-    gain.gain.setValueAtTime(volume, start)
-    gain.gain.exponentialRampToValueAtTime(0.01, start + duration)
-    osc.start(start)
-    osc.stop(start + duration)
+    gain.connect(master)
+
+    osc.start(time)
+    osc.stop(time + duration)
   }
 
-  const startTime = audioContext.currentTime
-  // Simple celebration melody
-  const melody = [
-    { freq: 523.25, duration: 0.3 }, // C
-    { freq: 523.25, duration: 0.3 },
-    { freq: 659.25, duration: 0.3 }, // E
-    { freq: 783.99, duration: 0.6 }, // G
-    { freq: 659.25, duration: 0.3 }, // E
-    { freq: 1046.5, duration: 0.9 }, // C
-  ]
+  // 🎵 MELODY LOOP (1 MENIT)
+  const playMelody = (startTime: number) => {
+    const melody = [
+      523.25, 659.25, 783.99, 659.25,
+      523.25, 659.25, 783.99, 1046.5,
+    ]
 
-  let currentTime = startTime
-  melody.forEach(({ freq, duration }) => {
-    playNote(freq, currentTime, duration)
-    currentTime += duration
-  })
+    let t = startTime
+
+    for (let i = 0; i < 60; i++) {
+      const freq = melody[i % melody.length]
+
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+
+      osc.type = 'sine'
+      osc.frequency.setValueAtTime(freq, t)
+
+      gain.gain.setValueAtTime(0.2, t)
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.5)
+
+      osc.connect(gain)
+      gain.connect(master)
+
+      osc.start(t)
+      osc.stop(t + 0.5)
+
+      t += 0.5
+    }
+  }
+
+  // ==========================
+  // 🎼 SEQUENCE UTAMA
+  // ==========================
+
+  // 🎸 JENG JENG JENG
+  playJeng(400, now + 0.1, 0.4)
+  playJeng(600, now + 0.5, 0.4)
+  playJeng(900, now + 0.9, 0.7)
+
+  // 🎤 VOICE
+  setTimeout(() => {
+    if ('speechSynthesis' in window) {
+      const utter = new SpeechSynthesisUtterance(
+        'Congratulations for the winner'
+      )
+
+      utter.lang = 'en-US'
+      utter.pitch = 1
+      utter.rate = 0.9
+      utter.volume = 1
+
+      window.speechSynthesis.speak(utter)
+    }
+  }, 1400)
+
+  // 🎵 MUSIK LATAR 1 MENIT
+  playMelody(now + 2)
 }
 
-// Countdown sounds with English numbers
+// ==========================
+// ⏱️ COUNTDOWN
+// ==========================
 export const playCountdownSound = (number: number) => {
-  const audioContext = typeof window !== 'undefined' ? new (window.AudioContext || (window as any).webkitAudioContext)() : null
-  if (!audioContext) return
+  const ctx = getCtx()
+  if (!ctx) return
 
-  // Different frequency for each number to make them distinct
   const frequencies: Record<number, number> = {
-    5: 400,  // Lower pitch
+    5: 400,
     4: 500,
-    3: 600,
-    2: 700,
-    1: 800,  // Higher pitch for "ONE"
+    3: 650,
+    2: 800,
+    1: 1000,
   }
 
   const freq = frequencies[number] || 400
-  const now = audioContext.currentTime
+  const now = ctx.currentTime
 
-  // Create a beep sound with the appropriate frequency
-  const osc = audioContext.createOscillator()
-  const gain = audioContext.createGain()
+  const osc = ctx.createOscillator()
+  const gain = ctx.createGain()
+
+  osc.type = 'square'
+  osc.frequency.setValueAtTime(freq, now)
+
+  gain.gain.setValueAtTime(0.7, now)
+  gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3)
 
   osc.connect(gain)
-  gain.connect(audioContext.destination)
-
-  osc.frequency.setValueAtTime(freq, now)
-  gain.gain.setValueAtTime(0.4, now)
-  gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3)
+  gain.connect(ctx.destination)
 
   osc.start(now)
   osc.stop(now + 0.3)
