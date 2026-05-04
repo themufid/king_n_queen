@@ -224,7 +224,32 @@ function LobbyView({ onStart }: { onStart: () => void }) {
               boxShadow: '0 0 50px 16px oklch(0.78 0.18 80 / 0.3)',
             }}
             whileTap={{ scale: 0.97 }}
-            onClick={onStart}
+            onClick={() => {
+              // ==========================
+              // 🔥 FIX AUDIO MOBILE (WAJIB)
+              // ==========================
+              const AudioCtx = window.AudioContext || (window as any).webkitAudioContext
+              const ctx = new AudioCtx()
+
+              if (ctx.state === 'suspended') {
+                ctx.resume()
+              }
+
+              // 🔥 unlock tambahan biar aman semua device
+              const unlockSound = () => {
+                const buffer = ctx.createBuffer(1, 1, 22050)
+                const source = ctx.createBufferSource()
+                source.buffer = buffer
+                source.connect(ctx.destination)
+                source.start(0)
+              }
+              unlockSound()
+
+              // ==========================
+              // ▶️ JALANKAN ASLI
+              // ==========================
+              onStart()
+            }}
             className="relative px-12 py-5 rounded-full font-serif font-bold text-lg md:text-xl
               tracking-widest uppercase text-black overflow-hidden cursor-pointer select-none"
             style={{

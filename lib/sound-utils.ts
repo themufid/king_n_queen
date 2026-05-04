@@ -1,11 +1,21 @@
 // ==========================
-// 🔊 SOUND + EFFECT ENGINE (MEGA EVENT VERSION)
+// 🔊 SOUND + EFFECT ENGINE (FINAL MOBILE FIX)
 // ==========================
 
-const getCtx = () => {
-  return typeof window !== 'undefined'
-    ? new (window.AudioContext || (window as any).webkitAudioContext)()
-    : null
+let ctx: AudioContext | null = null
+
+export const getCtx = () => {
+  if (typeof window === 'undefined') return null
+
+  if (!ctx) {
+    ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
+  }
+
+  if (ctx.state === 'suspended') {
+    ctx.resume()
+  }
+
+  return ctx
 }
 
 // ==========================
@@ -14,8 +24,9 @@ const getCtx = () => {
 const speak = (text: string, delay = 0) => {
   setTimeout(() => {
     if ('speechSynthesis' in window) {
+      speechSynthesis.cancel()
       const u = new SpeechSynthesisUtterance(text)
-      u.rate = 0.85
+      u.rate = 0.9
       u.pitch = 1
       u.volume = 1
       speechSynthesis.speak(u)
@@ -38,24 +49,24 @@ export const triggerFlash = () => {
   document.body.appendChild(f)
 
   setTimeout(() => {
-    f.style.transition = 'opacity 0.7s'
+    f.style.transition = 'opacity 0.6s'
     f.style.opacity = '0'
   }, 50)
 
-  setTimeout(() => f.remove(), 800)
+  setTimeout(() => f.remove(), 700)
 }
 
 // ==========================
-// 📳 SHAKE (LEBIH KERAS)
+// 📳 SHAKE
 // ==========================
 export const triggerShake = () => {
   document.body.animate(
     [
       { transform: 'translate(0,0)' },
-      { transform: 'translate(-10px,5px)' },
-      { transform: 'translate(10px,-5px)' },
-      { transform: 'translate(-8px,3px)' },
-      { transform: 'translate(8px,-3px)' },
+      { transform: 'translate(-12px,6px)' },
+      { transform: 'translate(12px,-6px)' },
+      { transform: 'translate(-8px,4px)' },
+      { transform: 'translate(8px,-4px)' },
       { transform: 'translate(0,0)' },
     ],
     { duration: 600 }
@@ -68,8 +79,8 @@ export const triggerShake = () => {
 export const playTickSound = () => {
   const ctx = getCtx()
   if (!ctx) return
-  const now = ctx.currentTime
 
+  const now = ctx.currentTime
   const o = ctx.createOscillator()
   const g = ctx.createGain()
 
@@ -92,6 +103,7 @@ export const playTickSound = () => {
 export const playVictorySound = () => {
   const ctx = getCtx()
   if (!ctx) return
+
   const now = ctx.currentTime
 
   ;[523, 659, 783, 1046].forEach((f, i) => {
@@ -113,7 +125,7 @@ export const playVictorySound = () => {
 }
 
 // ==========================
-// 🔥 MAIN CELEBRATION (SUPER RAMAI)
+// 🔥 MAIN CELEBRATION (SUPER FIX)
 // ==========================
 export const playCelebrationMusic = (
   kingName?: string,
@@ -125,21 +137,19 @@ export const playCelebrationMusic = (
   const now = ctx.currentTime
 
   const master = ctx.createGain()
-  master.gain.setValueAtTime(2.5, now) // 🔥 LEBIH KERAS
+  master.gain.setValueAtTime(3, now) // 🔥 SUPER KERAS
   master.connect(ctx.destination)
 
-  // ======================
-  // 🎸 GUITAR (TEBAL)
-  // ======================
+  // 🎸 GUITAR LAYER (LEBIH TEBAL)
   const guitar = (freq: number, time: number, duration: number) => {
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 4; i++) {
       const o = ctx.createOscillator()
       const g = ctx.createGain()
 
-      o.type = 'sawtooth' // lebih “gitar”
-      o.frequency.setValueAtTime(freq + i * 3, time)
+      o.type = 'sawtooth'
+      o.frequency.setValueAtTime(freq + i * 5, time)
 
-      g.gain.setValueAtTime(1.2 / (i + 1), time)
+      g.gain.setValueAtTime(1 / (i + 1), time)
       g.gain.exponentialRampToValueAtTime(0.01, time + duration)
 
       o.connect(g)
@@ -150,9 +160,7 @@ export const playCelebrationMusic = (
     }
   }
 
-  // ======================
-  // 💥 SUB BASS (GEDE)
-  // ======================
+  // 💥 BASS IMPACT
   const bass = (time: number) => {
     const o = ctx.createOscillator()
     const g = ctx.createGain()
@@ -160,70 +168,70 @@ export const playCelebrationMusic = (
     o.type = 'sine'
     o.frequency.setValueAtTime(50, time)
 
-    g.gain.setValueAtTime(2, time)
-    g.gain.exponentialRampToValueAtTime(0.01, time + 1.2)
+    g.gain.setValueAtTime(2.5, time)
+    g.gain.exponentialRampToValueAtTime(0.01, time + 1)
 
     o.connect(g)
     g.connect(master)
 
     o.start(time)
-    o.stop(time + 1.2)
+    o.stop(time + 1)
   }
 
-  // ======================
-  // 🎵 BACKGROUND
-  // ======================
+  // 👏 CROWD (REAL SOUND)
+  const playCrowd = () => {
+    const crowd = new Audio('/sounds/crowd.mp3')
+    crowd.volume = 1
+    crowd.play().catch(() => {})
+  }
+
+  // 🎵 MELODY (SEKALI SAJA)
   const melody = (start: number) => {
     const seq = [523, 659, 783, 659]
-    let t = start
 
-    for (let i = 0; i < seq.length; i++) {
+    seq.forEach((f, i) => {
       const o = ctx.createOscillator()
       const g = ctx.createGain()
 
       o.type = 'sine'
-      o.frequency.setValueAtTime(seq[i % seq.length], t)
+      o.frequency.setValueAtTime(f, start + i * 0.4)
 
-      g.gain.setValueAtTime(0.3, t)
-      g.gain.exponentialRampToValueAtTime(0.01, t + 0.4)
+      g.gain.setValueAtTime(0.3, start + i * 0.4)
+      g.gain.exponentialRampToValueAtTime(0.01, start + i * 0.4 + 0.4)
 
       o.connect(g)
       g.connect(master)
 
-      o.start(t)
-      o.stop(t + 0.4)
-
-      t += 0.4
-    }
+      o.start(start + i * 0.4)
+      o.stop(start + i * 0.4 + 0.4)
+    })
   }
 
   // ======================
-  // 🎬 FLOW CINEMATIC
+  // 🎬 CINEMATIC FLOW
   // ======================
 
-  // 🎤 ANNOUNCER
   speak('And the winner is...', 0)
 
-  // 🎸 JENG JENG JEEEEENG (LEBIH KERAS)
-  guitar(350, now + 1.2, 0.6)
-  guitar(550, now + 1.8, 0.6)
-  guitar(900, now + 2.4, 1)
+  guitar(350, now + 1.2, 0.7)
+  guitar(600, now + 1.9, 0.7)
+  guitar(1000, now + 2.6, 1.2)
 
-  // 💥 IMPACT + VISUAL
   setTimeout(() => {
     triggerFlash()
     triggerShake()
-  }, 2400)
+  }, 2600)
 
-  bass(now + 2.4)
+  bass(now + 2.6)
 
   // 🎤 NAMA PEMENANG
   speak(
-    `Congratulations'}`,
+    `Kongratulations ${kingName || ''} and ${queenName || ''}`,
     3500
   )
 
-  // 🎵 BACKGROUND
+  setTimeout(playCrowd, 3600)
+
   melody(now + 3)
 }
 
@@ -233,8 +241,8 @@ export const playCelebrationMusic = (
 export const playCountdownSound = (n: number) => {
   const ctx = getCtx()
   if (!ctx) return
-  const now = ctx.currentTime
 
+  const now = ctx.currentTime
   const freq: any = { 5: 400, 4: 500, 3: 650, 2: 800, 1: 1000 }
 
   const o = ctx.createOscillator()
