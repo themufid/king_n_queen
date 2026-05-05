@@ -286,122 +286,167 @@ export default function WinnerDisplay({ king, queen, onReplay }: WinnerDisplayPr
   const musicPlayedRef = useRef(false)
 
   useEffect(() => {
+    // ==========================
+    // 🔥 FIX MOBILE AUDIO (WAJIB)
+    // ==========================
+    const unlockAudio = () => {
+      try {
+        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
+        const buffer = ctx.createBuffer(1, 1, 22050)
+        const source = ctx.createBufferSource()
+        source.buffer = buffer
+        source.connect(ctx.destination)
+        source.start(0)
+      } catch {}
+      document.removeEventListener('click', unlockAudio)
+    }
+
+    document.addEventListener('click', unlockAudio)
+
+    // ==========================
+    // 🎬 MAIN PLAY
+    // ==========================
     if (!musicPlayedRef.current) {
-      playCelebrationMusic()
+      // 🔊 kirim nama ke sound engine
+      playCelebrationMusic(king.name, queen.name)
       musicPlayedRef.current = true
     }
+
+    // ==========================
+    // 🎆 FLASH + SHAKE SYNC
+    // ==========================
+    const fx = setTimeout(() => {
+      const flash = document.createElement('div')
+      flash.style.cssText = `
+        position:fixed;inset:0;
+        background:white;
+        opacity:1;
+        z-index:9999;
+        pointer-events:none;
+      `
+      document.body.appendChild(flash)
+
+      setTimeout(() => {
+        flash.style.transition = 'opacity 0.6s'
+        flash.style.opacity = '0'
+      }, 50)
+
+      setTimeout(() => flash.remove(), 700)
+
+      // 📳 SHAKE
+      document.body.animate(
+        [
+          { transform: 'translate(0,0)' },
+          { transform: 'translate(-10px,5px)' },
+          { transform: 'translate(10px,-5px)' },
+          { transform: 'translate(-8px,3px)' },
+          { transform: 'translate(8px,-3px)' },
+          { transform: 'translate(0,0)' },
+        ],
+        { duration: 600 }
+      )
+    }, 2200)
+
+    // ==========================
+    // 🎤 SEBUT NAMA PEMENANG
+    // ==========================
+    const speakWinner = setTimeout(() => {
+      if ('speechSynthesis' in window) {
+        const text = `Congratulations to the winners. King ${king.name} and Queen ${queen.name}`
+        const utter = new SpeechSynthesisUtterance(text)
+        utter.rate = 0.85
+        utter.pitch = 1
+        utter.volume = 1
+        speechSynthesis.cancel() // biar gak tabrakan
+        speechSynthesis.speak(utter)
+      }
+    }, 3200)
+
+    // ==========================
+    // ⏱️ SHOW BUTTON
+    // ==========================
     const t = setTimeout(() => setShowReplay(true), 3500)
-    return () => clearTimeout(t)
-  }, [])
+
+    return () => {
+      clearTimeout(t)
+      clearTimeout(fx)
+      clearTimeout(speakWinner)
+      document.removeEventListener('click', unlockAudio)
+    }
+  }, [king.name, queen.name])
 
   return (
     <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center overflow-hidden">
       <ConfettiCanvas />
 
-      {/* Background spotlights */}
-      <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-        <div
-          className="absolute top-0 left-1/4 w-96 h-96 rounded-full opacity-15"
-          style={{
-            background:
-              'radial-gradient(circle, oklch(0.78 0.18 80 / 1) 0%, transparent 70%)',
-          }}
-        />
-        <div
-          className="absolute top-0 right-1/4 w-96 h-96 rounded-full opacity-15"
-          style={{
-            background:
-              'radial-gradient(circle, oklch(0.55 0.2 300 / 1) 0%, transparent 70%)',
-          }}
-        />
-        <div
-          className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[80vw] h-64 rounded-full opacity-10"
-          style={{
-            background:
-              'radial-gradient(ellipse, oklch(0.78 0.18 80 / 0.8) 0%, transparent 70%)',
-          }}
-        />
+      {/* Background */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-96 h-96 rounded-full opacity-15 bg-[radial-gradient(circle,oklch(0.78_0.18_80),transparent)]" />
+        <div className="absolute top-0 right-1/4 w-96 h-96 rounded-full opacity-15 bg-[radial-gradient(circle,oklch(0.55_0.2_300),transparent)]" />
       </div>
 
       <div className="relative z-10 flex flex-col items-center gap-6 px-4 py-8">
-        {/* Title */}
+
+        {/* TITLE */}
         <motion.div
-          initial={{ opacity: 0, y: -30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: 'easeOut' }}
+          initial={{ opacity: 0, scale: 0.7 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.7 }}
           className="text-center"
         >
-          <p className="font-sans text-muted-foreground tracking-[0.4em] uppercase text-xs mb-1">
-            Selamat Kepada
-          </p>
-          <h1 className="font-serif text-3xl md:text-5xl font-black shimmer-text tracking-wider text-balance">
-            KING &amp; QUEEN
-          </h1>
+          <p className="tracking-[0.4em] text-xs text-gray-400">Selamat Kepada</p>
+
+          <motion.h1
+            initial={{ y: -30 }}
+            animate={{ y: 0 }}
+            className="text-4xl md:text-6xl font-black text-white"
+          >
+            KING & QUEEN
+          </motion.h1>
+
           <motion.p
-            initial={{ opacity: 0, y: 10 }}
             animate={{
-              opacity: 1,
-              y: 0,
               textShadow: [
-                '0 0 5px rgba(255,255,255,0.2)',
-                '0 0 30px rgba(255,215,0,1)',
-                '0 0 5px rgba(255,255,255,0.2)',
+                '0 0 10px gold',
+                '0 0 40px gold',
+                '0 0 10px gold',
               ]
             }}
-            transition={{
-              delay: 0.4,
-              duration: 1.5,
-              repeat: Infinity,
-              ease: 'easeInOut'
-            }}
-            className="font-serif uppercase mt-2
-              text-lg md:text-2xl lg:text-3xl
-              font-black tracking-[0.25em]
-              text-white"
-            style={{
-              textShadow: `
-                0 2px 0 #aaa,
-                0 4px 0 #888,
-                0 6px 0 #666,
-                0 8px 12px rgba(0,0,0,0.7)
-              `
-            }}
+            transition={{ repeat: Infinity, duration: 1.5 }}
+            className="mt-2 text-xl md:text-3xl font-bold text-white tracking-widest"
           >
             SMK YADIKA BANDAR LAMPUNG
           </motion.p>
         </motion.div>
 
-        {/* Winners side by side */}
-        <div className="flex items-end gap-6 md:gap-16">
-          <WinnerCard candidate={king} title="King" delay={0.3} color="gold" />
-
-          {/* Center decoration */}
+        {/* WINNERS */}
+        <div className="flex gap-10 items-end">
           <motion.div
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 1.2, duration: 0.5 }}
-            className="flex flex-col items-center gap-2 mb-24"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 1 }}
           >
-            <div className="w-px h-16 bg-gradient-to-b from-transparent via-[var(--gold)]/50 to-transparent" />
-            <span className="font-serif text-[var(--gold)]/50 text-xs tracking-widest">&times;</span>
-            <div className="w-px h-16 bg-gradient-to-b from-transparent via-[var(--purple)]/50 to-transparent" />
+            <WinnerCard candidate={king} title="King" delay={0.3} color="gold" />
           </motion.div>
 
-          <WinnerCard candidate={queen} title="Queen" delay={0.6} color="purple" />
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 1.2 }}
+          >
+            <WinnerCard candidate={queen} title="Queen" delay={0.6} color="purple" />
+          </motion.div>
         </div>
 
-        {/* Replay button */}
+        {/* BUTTON */}
         {showReplay && (
           <motion.button
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.97 }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
             onClick={onReplay}
-            className="mt-2 px-8 py-3 rounded-full border border-[var(--border)] text-muted-foreground
-              font-sans font-medium text-sm tracking-widest uppercase
-              hover:border-[var(--gold)]/50 hover:text-[var(--gold)] transition-colors duration-300"
+            className="mt-4 px-8 py-3 rounded-full border text-white border-white hover:border-yellow-400 hover:text-yellow-400 transition"
           >
             Ulangi
           </motion.button>
