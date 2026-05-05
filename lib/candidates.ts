@@ -141,4 +141,4 @@ export const weightedQueenCandidates: Candidate[] = [
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const PREDETERMINED_WINNER_KING_ID = 1   // Rehan Bastian
-export const PREDETERMINED_WINNER_QUEEN_ID = 6  // Khania Fitra Mareta Anjani
+export const PREDETERMINED_WINNER_QUEEN_ID = 8 // Lily Essence Sinulingga
