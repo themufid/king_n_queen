@@ -1,5 +1,6 @@
 'use client'
 
+import { unlockAudio } from '@/lib/sound-utils'
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
@@ -67,7 +68,7 @@ export default function RevealScreen({
     if (countdown > 0) {
       playCountdownSound(countdown)
     }
-    const t = setTimeout(() => setCountdown((c) => c - 1), 1000)
+    const t = setTimeout(() => setCountdown((c) => c - 1), 2000)
     return () => clearTimeout(t)
   }, [phase, countdown])
 

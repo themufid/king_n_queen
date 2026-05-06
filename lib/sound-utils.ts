@@ -1,80 +1,95 @@
 // ==========================
-// 🔊 SOUND + EFFECT ENGINE (FINAL MOBILE FIX)
+// 🔊 SOUND ENGINE (FINAL STABLE)
 // ==========================
 
 let ctx: AudioContext | null = null
+let unlocked = false
 
-export const getCtx = () => {
+// ==========================
+// 🎧 GET AUDIO CONTEXT
+// ==========================
+export const getCtx = (): AudioContext | null => {
   if (typeof window === 'undefined') return null
 
   if (!ctx) {
     ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
   }
 
-  if (ctx.state === 'suspended') {
-    ctx.resume()
+  if (ctx.state !== 'running') {
+    ctx.resume().catch(() => {})
   }
 
   return ctx
 }
 
 // ==========================
-// 🎤 SPEAK
+// 🔓 UNLOCK AUDIO (WAJIB HP)
 // ==========================
-const speak = (text: string, delay = 0) => {
+export const unlockAudio = () => {
+  const c = getCtx()
+  if (!c || unlocked) return
+
+  try {
+    const buffer = c.createBuffer(1, 1, 22050)
+    const src = c.createBufferSource()
+    src.buffer = buffer
+    src.connect(c.destination)
+    src.start(0)
+
+    unlocked = true
+    console.log('🔊 Audio unlocked')
+  } catch (e) {
+    console.log('unlock gagal', e)
+  }
+}
+
+// ==========================
+// 🎤 SPEAK (BRITISH SAFE)
+// ==========================
+const loadVoices = () =>
+  new Promise<SpeechSynthesisVoice[]>((resolve) => {
+    if (typeof window === 'undefined') return resolve([])
+
+    let voices = speechSynthesis.getVoices()
+    if (voices.length) return resolve(voices)
+
+    speechSynthesis.onvoiceschanged = () => {
+      voices = speechSynthesis.getVoices()
+      resolve(voices)
+    }
+  })
+
+export const speak = async (text: string, delay = 0) => {
+  if (typeof window === 'undefined') return
+  if (!('speechSynthesis' in window)) return
+
+  const voices = await loadVoices()
+
   setTimeout(() => {
-    if ('speechSynthesis' in window) {
+    try {
       speechSynthesis.cancel()
-      const u = new SpeechSynthesisUtterance(text)
-      u.rate = 0.9
-      u.pitch = 1
-      u.volume = 1
-      speechSynthesis.speak(u)
+
+      const utter = new SpeechSynthesisUtterance(text)
+
+      const british =
+        voices.find(v => v.lang === 'en-GB') ||
+        voices.find(v => v.lang.includes('en'))
+
+      if (british) utter.voice = british
+
+      utter.rate = 0.85
+      utter.pitch = 1
+      utter.volume = 1
+
+      speechSynthesis.speak(utter)
+    } catch (e) {
+      console.log('speak error:', e)
     }
   }, delay)
 }
 
 // ==========================
-// 💥 FLASH
-// ==========================
-export const triggerFlash = () => {
-  const f = document.createElement('div')
-  f.style.cssText = `
-    position:fixed;inset:0;
-    background:white;
-    opacity:1;
-    z-index:9999;
-    pointer-events:none;
-  `
-  document.body.appendChild(f)
-
-  setTimeout(() => {
-    f.style.transition = 'opacity 0.6s'
-    f.style.opacity = '0'
-  }, 50)
-
-  setTimeout(() => f.remove(), 700)
-}
-
-// ==========================
-// 📳 SHAKE
-// ==========================
-export const triggerShake = () => {
-  document.body.animate(
-    [
-      { transform: 'translate(0,0)' },
-      { transform: 'translate(-12px,6px)' },
-      { transform: 'translate(12px,-6px)' },
-      { transform: 'translate(-8px,4px)' },
-      { transform: 'translate(8px,-4px)' },
-      { transform: 'translate(0,0)' },
-    ],
-    { duration: 600 }
-  )
-}
-
-// ==========================
-// 🔊 TICK
+// 🔊 TICK (SPIN)
 // ==========================
 export const playTickSound = () => {
   const ctx = getCtx()
@@ -85,10 +100,10 @@ export const playTickSound = () => {
   const g = ctx.createGain()
 
   o.type = 'square'
-  o.frequency.setValueAtTime(1200, now)
+  o.frequency.value = 700
 
-  g.gain.setValueAtTime(0.8, now)
-  g.gain.exponentialRampToValueAtTime(0.01, now + 0.05)
+  g.gain.setValueAtTime(0.15, now)
+  g.gain.exponentialRampToValueAtTime(0.001, now + 0.05)
 
   o.connect(g)
   g.connect(ctx.destination)
@@ -98,34 +113,84 @@ export const playTickSound = () => {
 }
 
 // ==========================
-// 🎉 VICTORY
+// ⏱️ COUNTDOWN (2 DETIK + VOICE)
 // ==========================
-export const playVictorySound = () => {
+export const playCountdownSound = (n: number) => {
   const ctx = getCtx()
   if (!ctx) return
 
   const now = ctx.currentTime
 
-  ;[523, 659, 783, 1046].forEach((f, i) => {
+  const o = ctx.createOscillator()
+  const g = ctx.createGain()
+
+  o.type = 'triangle'
+  o.frequency.value = 300 + n * 70
+
+  g.gain.setValueAtTime(0.4, now)
+  g.gain.exponentialRampToValueAtTime(0.001, now + 0.6)
+
+  o.connect(g)
+  g.connect(ctx.destination)
+
+  o.start(now)
+  o.stop(now + 0.6)
+
+  const words: Record<number, string> = {
+    5: 'Five',
+    4: 'Four',
+    3: 'Three',
+    2: 'Two',
+    1: 'One',
+    0: 'Zero',
+  }
+
+  if (words[n]) {
+    speak(words[n], 500) // 🔥 biar jelas
+  }
+}
+
+// ==========================
+// 🎸 JRRENG GITAR REALISTIS (1x)
+// ==========================
+const guitarJreng = (time: number, root: number) => {
+  const ctx = getCtx()
+  if (!ctx) return
+
+  const freqs = [
+    root,
+    root * 1.26,
+    root * 1.5,
+    root * 2.01,
+  ]
+
+  freqs.forEach((freq, i) => {
     const o = ctx.createOscillator()
     const g = ctx.createGain()
+    const filter = ctx.createBiquadFilter()
 
-    o.type = 'triangle'
-    o.frequency.setValueAtTime(f, now + i * 0.2)
+    // 🔥 karakter gitar
+    o.type = 'sawtooth'
+    o.frequency.setValueAtTime(freq + Math.random() * 2, time + i * 0.04)
 
-    g.gain.setValueAtTime(0.7, now + i * 0.2)
-    g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.4)
+    filter.type = 'lowpass'
+    filter.frequency.setValueAtTime(1800, time)
 
-    o.connect(g)
+    // 🎸 attack & decay gitar
+    g.gain.setValueAtTime(1.4, time + i * 0.04)
+    g.gain.exponentialRampToValueAtTime(0.001, time + 1.8)
+
+    o.connect(filter)
+    filter.connect(g)
     g.connect(ctx.destination)
 
-    o.start(now + i * 0.2)
-    o.stop(now + i * 0.4)
+    o.start(time + i * 0.04)
+    o.stop(time + 1.8)
   })
 }
 
 // ==========================
-// 🔥 MAIN CELEBRATION (SUPER FIX)
+// 🎉 CELEBRATION (FINAL)
 // ==========================
 export const playCelebrationMusic = (
   kingName?: string,
@@ -136,116 +201,25 @@ export const playCelebrationMusic = (
 
   const now = ctx.currentTime
 
-  const master = ctx.createGain()
-  master.gain.setValueAtTime(3, now) // 🔥 SUPER KERAS
-  master.connect(ctx.destination)
+  // 🔥 JRRENG SEKALI
+  guitarJreng(now, 196)
 
-  // 🎸 GUITAR LAYER (LEBIH TEBAL)
-  const guitar = (freq: number, time: number, duration: number) => {
-    for (let i = 0; i < 4; i++) {
-      const o = ctx.createOscillator()
-      const g = ctx.createGain()
-
-      o.type = 'sawtooth'
-      o.frequency.setValueAtTime(freq + i * 5, time)
-
-      g.gain.setValueAtTime(1 / (i + 1), time)
-      g.gain.exponentialRampToValueAtTime(0.01, time + duration)
-
-      o.connect(g)
-      g.connect(master)
-
-      o.start(time)
-      o.stop(time + duration)
-    }
-  }
-
-  // 💥 BASS IMPACT
-  const bass = (time: number) => {
-    const o = ctx.createOscillator()
-    const g = ctx.createGain()
-
-    o.type = 'sine'
-    o.frequency.setValueAtTime(50, time)
-
-    g.gain.setValueAtTime(2.5, time)
-    g.gain.exponentialRampToValueAtTime(0.01, time + 1)
-
-    o.connect(g)
-    g.connect(master)
-
-    o.start(time)
-    o.stop(time + 1)
-  }
-
-
-
-  // 🎵 MELODY (SEKALI SAJA)
-  const melody = (start: number) => {
-    const seq = [523, 659, 783, 659]
-
-    seq.forEach((f, i) => {
-      const o = ctx.createOscillator()
-      const g = ctx.createGain()
-
-      o.type = 'sine'
-      o.frequency.setValueAtTime(f, start + i * 0.4)
-
-      g.gain.setValueAtTime(0.3, start + i * 0.4)
-      g.gain.exponentialRampToValueAtTime(0.01, start + i * 0.4 + 0.4)
-
-      o.connect(g)
-      g.connect(master)
-
-      o.start(start + i * 0.4)
-      o.stop(start + i * 0.4 + 0.4)
-    })
-  }
-
-  // ======================
-  // 🎬 CINEMATIC FLOW
-  // ======================
-
-  speak('Kongratulations', 0)
-
-  guitar(350, now + 1.2, 0.7)
-  guitar(600, now + 1.9, 0.7)
-  guitar(1000, now + 2.6, 1.2)
-
+  // 💥 efek
   setTimeout(() => {
-    triggerFlash()
-    triggerShake()
-  }, 2600)
+    document.body.animate(
+      [
+        { transform: 'translate(0,0)' },
+        { transform: 'translate(-10px,5px)' },
+        { transform: 'translate(10px,-5px)' },
+        { transform: 'translate(0,0)' },
+      ],
+      { duration: 500 }
+    )
+  }, 800)
 
-  bass(now + 2.6)
-
-
- 
-  melody(now + 3)
-}
-
-// ==========================
-// ⏱️ COUNTDOWN
-// ==========================
-export const playCountdownSound = (n: number) => {
-  const ctx = getCtx()
-  if (!ctx) return
-
-  const now = ctx.currentTime
-  const freq: any = { 5: 400, 4: 500, 3: 650, 2: 800, 1: 1000 }
-
-  const o = ctx.createOscillator()
-  const g = ctx.createGain()
-
-  o.type = 'square'
-  o.frequency.setValueAtTime(freq[n] || 400, now)
-
-  g.gain.setValueAtTime(0.9, now)
-  g.gain.exponentialRampToValueAtTime(0.01, now + 0.3)
-
-  o.connect(g)
-  g.connect(ctx.destination)
-
-  o.start(now)
-  o.stop(now + 0.3)
+  // 🎤 voice
+  speak(
+    `Congratulations. King ${kingName ?? ''} and Queen ${queenName ?? ''}`,
+    1500
+  )
 }

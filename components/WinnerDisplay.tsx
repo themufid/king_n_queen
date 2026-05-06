@@ -281,39 +281,46 @@ function WinnerCard({ candidate, title, delay, color }: WinnerCardProps) {
   )
 }
 
+import { useRouter } from 'next/navigation'
+
 export default function WinnerDisplay({ king, queen, onReplay }: WinnerDisplayProps) {
   const [showReplay, setShowReplay] = useState(false)
   const musicPlayedRef = useRef(false)
+  const router = useRouter() // ✅ TAMBAHAN
 
   useEffect(() => {
     // ==========================
-    // 🔥 FIX MOBILE AUDIO (WAJIB)
+    // 🔥 FIX MOBILE AUDIO
     // ==========================
     const unlockAudio = () => {
       try {
         const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
+        if (ctx.state === 'suspended') ctx.resume()
+
         const buffer = ctx.createBuffer(1, 1, 22050)
         const source = ctx.createBufferSource()
         source.buffer = buffer
         source.connect(ctx.destination)
         source.start(0)
       } catch {}
+
+      document.removeEventListener('touchstart', unlockAudio)
       document.removeEventListener('click', unlockAudio)
     }
 
-    document.addEventListener('click', unlockAudio)
+    document.addEventListener('touchstart', unlockAudio, { once: true })
+    document.addEventListener('click', unlockAudio, { once: true })
 
     // ==========================
-    // 🎬 MAIN PLAY
+    // 🎬 MAIN SOUND
     // ==========================
     if (!musicPlayedRef.current) {
-      // 🔊 kirim nama ke sound engine
       playCelebrationMusic(king.name, queen.name)
       musicPlayedRef.current = true
     }
 
     // ==========================
-    // 🎆 FLASH + SHAKE SYNC
+    // 🎆 FX
     // ==========================
     const fx = setTimeout(() => {
       const flash = document.createElement('div')
@@ -333,7 +340,6 @@ export default function WinnerDisplay({ king, queen, onReplay }: WinnerDisplayPr
 
       setTimeout(() => flash.remove(), 700)
 
-      // 📳 SHAKE
       document.body.animate(
         [
           { transform: 'translate(0,0)' },
@@ -348,7 +354,7 @@ export default function WinnerDisplay({ king, queen, onReplay }: WinnerDisplayPr
     }, 2200)
 
     // ==========================
-    // 🎤 SEBUT NAMA PEMENANG
+    // 🎤 SPEAK
     // ==========================
     const speakWinner = setTimeout(() => {
       if ('speechSynthesis' in window) {
@@ -357,21 +363,17 @@ export default function WinnerDisplay({ king, queen, onReplay }: WinnerDisplayPr
         utter.rate = 0.85
         utter.pitch = 1
         utter.volume = 1
-        speechSynthesis.cancel() // biar gak tabrakan
+        speechSynthesis.cancel()
         speechSynthesis.speak(utter)
       }
     }, 3200)
 
-    // ==========================
-    // ⏱️ SHOW BUTTON
-    // ==========================
     const t = setTimeout(() => setShowReplay(true), 3500)
 
     return () => {
       clearTimeout(t)
       clearTimeout(fx)
       clearTimeout(speakWinner)
-      document.removeEventListener('click', unlockAudio)
     }
   }, [king.name, queen.name])
 
@@ -379,7 +381,7 @@ export default function WinnerDisplay({ king, queen, onReplay }: WinnerDisplayPr
     <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center overflow-hidden">
       <ConfettiCanvas />
 
-      {/* Background */}
+      {/* BACKGROUND */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-0 left-1/4 w-96 h-96 rounded-full opacity-15 bg-[radial-gradient(circle,oklch(0.78_0.18_80),transparent)]" />
         <div className="absolute top-0 right-1/4 w-96 h-96 rounded-full opacity-15 bg-[radial-gradient(circle,oklch(0.55_0.2_300),transparent)]" />
@@ -421,36 +423,48 @@ export default function WinnerDisplay({ king, queen, onReplay }: WinnerDisplayPr
 
         {/* WINNERS */}
         <div className="flex gap-10 items-end">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 1 }}
-          >
+          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 1 }}>
             <WinnerCard candidate={king} title="King" delay={0.3} color="gold" />
           </motion.div>
 
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 1.2 }}
-          >
+          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 1.2 }}>
             <WinnerCard candidate={queen} title="Queen" delay={0.6} color="purple" />
           </motion.div>
         </div>
 
-        {/* BUTTON */}
+        {/* ==========================
+            🔥 BUTTON AREA (FIX)
+           ========================== */}
         {showReplay && (
-          <motion.button
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={onReplay}
-            className="mt-4 px-8 py-3 rounded-full border text-white border-white hover:border-yellow-400 hover:text-yellow-400 transition"
-          >
-            Ulangi
-          </motion.button>
+          <div className="flex gap-4 mt-6">
+            
+            {/* 🔁 ULANGI */}
+            <motion.button
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={onReplay}
+              className="px-8 py-3 rounded-full border text-white border-white hover:border-yellow-400 hover:text-yellow-400 transition"
+            >
+              Ulangi
+            </motion.button>
+
+            {/* 📊 LIHAT DATA */}
+            <motion.button
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => router.push('/data')} // ✅ PENTING
+              className="px-8 py-3 rounded-full border border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-black transition font-bold"
+            >
+              Lihat Data
+            </motion.button>
+
+          </div>
         )}
+
       </div>
     </div>
   )
